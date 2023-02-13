@@ -203,7 +203,8 @@ print(sales1)
 
 cash_flow = pd.read_excel(path + 'Cash_Flow.xlsx', sheet_name='CF')
 cash_flow = cash_flow.dropna()
-cash_flow['quarter'] = cash_flow['Date'] + pd.offsets.QuarterEnd()
+cash_flow['quarter'] = cash_flow['Fiscal quarter end'] + pd.offsets.QuarterEnd()
+
 print(cash_flow.head())
 print(cash_flow.columns)
 
@@ -234,9 +235,20 @@ dfcorr.corr(method='pearson')
 
 # Run an OLS regression with two size variables, lag1lnmc and lag1lnsales. Run the regression again, with just lag1mc or lag1sales, and compare the results. Show how the positive correlation between market cap and sales leads to one coefficient being positive and another coefficient being negative. Repeat using z-scores.
 y1 = combined1['abretadj']
-# x  = combined1[['lag1lnmc']]
-# x  = combined1[['lag1lnsales']]
 x  = combined1[['lag1lnmc', 'lag1lnsales', 'CF']]
+x1 = StandardScaler().fit_transform(x)
+x = sm.add_constant(x)
+x1 = sm.add_constant(x1)
+model = sm.OLS(y1, x).fit()
+print_model = model.summary()
+ols_coef = model.params
+ols_rsq  = model.rsquared
+print(print_model)
+print(f'R-squared: {model.rsquared:.4f}')
+print(ols_coef)
+
+y1 = combined1['abretadj']
+x  = combined1[['CF']]
 x1 = StandardScaler().fit_transform(x)
 x = sm.add_constant(x)
 x1 = sm.add_constant(x1)
@@ -251,7 +263,8 @@ print(ols_coef)
 
 # Now incorporate industry indicator variables, and run the regressions again with two size variables.
 y1 = combined1['abretadj']
-x  = combined1[['lag1lnmc', 'lag1lnsales', 'CF',
+# x  = combined1[['lag1lnmc', 'lag1lnsales', 'CF',
+x  = combined1[['CF',
     'd_1100_Non_Energy_Minerals',
     'd_1200_Producer_Manufacturing',
     'd_1300_Electronic_Technology',
@@ -275,8 +288,6 @@ x  = combined1[['lag1lnmc', 'lag1lnsales', 'CF',
     'd_4885_Real_Estate_Dev',
     'd_4890_REIT',
     'd_4900_Communications']]
-# x  = combined1[['lag1lnmc']]
-# x  = combined1[['lag1lnsales']]
 x1 = StandardScaler().fit_transform(x)
 x = sm.add_constant(x)
 x1 = sm.add_constant(x1)
@@ -286,73 +297,73 @@ ols_coef = model.params
 ols_rsq  = model.rsquared
 print(print_model)
 print(f'R-squared: {model.rsquared:.4f}')
-# print(ols_coef)
+print(ols_coef)
 
 
 # On the combined dataset, with two measures of size, run a LASSO regression of abnormal returns on characteristics in which the variables are transformed to z-scores. Industry indicator variables are excluded. There is an intercept and one industry (6000 Miscellaneous) is omitted. The intercept is the baseline monthly return on 6000 Miscellaneous before consideration of relative market capitalisation, and the coeffficients on other industries are incremental returns associated with those industries.
-# y1 = combined1['abretadj']
+y1 = combined1['abretadj']
 # x = combined1[['lag1lnmc']]
-# # x = combined1[['lag1lnmc', 'lag1lnsales']]
-# # x = combined1[['lag1lnmc', 'lag1lnsales']]
-# x1 = StandardScaler().fit_transform(x)
-# x1 = sm.add_constant(x1)
-# lasso = Lasso(alpha = 0.001)
-# lasso.fit(x1, y1)
-# lasso_coef = lasso.fit(x1, y1).coef_
-# lasso_score = lasso.score(x1, y1)
-# print(f'Lasso score: {lasso_score: .4f}')
-# print(lasso_coef)
-# print(x.columns)
+x = combined1[['CF']]
+x1 = StandardScaler().fit_transform(x)
+x1 = sm.add_constant(x1)
+lasso = Lasso(alpha = 0.001)
+lasso.fit(x1, y1)
+lasso_coef = lasso.fit(x1, y1).coef_
+lasso_score = lasso.score(x1, y1)
+print(f'Lasso score: {lasso_score: .4f}')
+print(lasso_coef)
+print(x.columns)
 # print(pd.Series(lasso_coef, index = x.columns)) #This only works if the constant is excluded.
 
-# y1 = combined1['abretadj']
-# x = combined1[['lag1lnmc', 'lag1lnsales',
-#     'd_1100_Non_Energy_Minerals',
-#     'd_1200_Producer_Manufacturing',
-#     'd_1300_Electronic_Technology',
-#     'd_1400_Consumer_Durables',
-#     'd_2100_Energy_Minerals',
-#     'd_2200_Process_Industries',
-#     'd_2300_Health_Technology',
-#     'd_2400_Consumer_Non_Durables',
-#     'd_3100_Industrial_Services',
-#     'd_3200_Commercial_Services',
-#     'd_3250_Distribution_Services',
-#     'd_3300_Technology_Services',
-#     'd_3350_Health_Services',
-#     'd_3400_Consumer_Services',
-#     'd_3500_Retail_Trade',
-#     'd_4600_Transportation',
-#     'd_4700_Utilities',
-#     'd_4801_Banks',
-#     'd_4802_Finance_NEC',
-#     'd_4803_Insurance',
-#     'd_4885_Real_Estate_Dev',
-#     'd_4890_REIT',
-#     'd_4900_Communications']]
-# x1 = StandardScaler().fit_transform(x)
-# x1 = sm.add_constant(x1)
-# lasso = Lasso(alpha = 0.0014)
-# lasso.fit(x1, y1)
-# lasso_coef = lasso.fit(x1, y1).coef_
-# lasso_score = lasso.score(x1, y1)
-# print(f'Lasso score: {lasso_score: .4f}')
-# print(lasso_coef)
-# print(x.columns)
+y1 = combined1['abretadj']
+x = combined1[['lag1lnmc', 'lag1lnsales', 'CF',
+    'd_1100_Non_Energy_Minerals',
+    'd_1200_Producer_Manufacturing',
+    'd_1300_Electronic_Technology',
+    'd_1400_Consumer_Durables',
+    'd_2100_Energy_Minerals',
+    'd_2200_Process_Industries',
+    'd_2300_Health_Technology',
+    'd_2400_Consumer_Non_Durables',
+    'd_3100_Industrial_Services',
+    'd_3200_Commercial_Services',
+    'd_3250_Distribution_Services',
+    'd_3300_Technology_Services',
+    'd_3350_Health_Services',
+    'd_3400_Consumer_Services',
+    'd_3500_Retail_Trade',
+    'd_4600_Transportation',
+    'd_4700_Utilities',
+    'd_4801_Banks',
+    'd_4802_Finance_NEC',
+    'd_4803_Insurance',
+    'd_4885_Real_Estate_Dev',
+    'd_4890_REIT',
+    'd_4900_Communications']]
+x1 = StandardScaler().fit_transform(x)
+x1 = sm.add_constant(x1)
+lasso = Lasso(alpha = 0.0014)
+lasso.fit(x1, y1)
+lasso_coef = lasso.fit(x1, y1).coef_
+lasso_score = lasso.score(x1, y1)
+print(f'Lasso score: {lasso_score: .4f}')
+print(lasso_coef)
+print(x.columns)
 # print(pd.Series(lasso_coef, index = x.columns)) #This only works if the constant is excluded.
 
 
-# y1 = combined1['abretadj']
+y1 = combined1['abretadj']
 # x = combined1[['lag1lnmc', 'lag1lnsales']]
-# x1 = StandardScaler().fit_transform(x)
-# x1 = sm.add_constant(x1)
-# lasso = Lasso(alpha = 0.001)
-# lasso.fit(x1, y1)
-# lasso_coef = lasso.fit(x1, y1).coef_
-# lasso_score = lasso.score(x1, y1)
-# print(f'Lasso score: {lasso_score: .4f}')
-# print(lasso_coef)
-# print(x.columns)
+x = combined1[['CF']]
+x1 = StandardScaler().fit_transform(x)
+x1 = sm.add_constant(x1)
+lasso = Lasso(alpha = 0.001)
+lasso.fit(x1, y1)
+lasso_coef = lasso.fit(x1, y1).coef_
+lasso_score = lasso.score(x1, y1)
+print(f'Lasso score: {lasso_score: .4f}')
+print(lasso_coef)
+print(x.columns)
 # print(pd.Series(lasso_coef, index = x.columns)) #This only works if the constant is excluded.
 
 
